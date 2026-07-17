@@ -1,21 +1,20 @@
 import express from 'express';
-import 'dotenv/config'
+
 const app = express();
-
-const port = process.env.port;
-
+const port = 3000;
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.get('/hitesh', (req, res) => {
-  res.send('hii this is hitesh');
+app.get('/hitesh', (request, response) => {
+  response.send('hii this is hitesh')
 })
 
-app.get('/leetcode', (req, res) => {
-  res.send('<a href="https://leetcode.com" target="_blank">go to leetcode</a>');
+app.get('/version 1 updated', (req, res) => {
+  console.log('it the version 1 updated');
 })
+
 app.listen(port, () => {
-  console.log(`app server is running, is listening on port ${port}`);
+  console.log(`app is listening on port ${port}`);
 });
