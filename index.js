@@ -9,7 +9,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/hitesh', (request, response) => {
-  response.send(<h1>Hii This is HITESH, Welcome..</h1>)
+  response.send('<h1>Hii This is HITESH, Welcome..</h1>')
 })
 
 app.get('/leetcode', (req, res) => {
