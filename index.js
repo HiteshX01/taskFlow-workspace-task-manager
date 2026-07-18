@@ -4,7 +4,7 @@ const app = express();
 import dotenv from 'dotenv';
 dotenv.config();
 //const port = 3000;
-const port = process.env.port;
+const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
@@ -17,7 +17,7 @@ app.get('/hitesh', (request, response) => {
 app.get('/leetcode', (req, res) => {
   res.send('<a href=https://leetcode.com>leetcode</a>')
 })
-app.get('/version 1 updated', (req, res) => {
+app.get('/version-1-updated', (req, res) => {
   console.log('it the version 1 updated');
 })
 
