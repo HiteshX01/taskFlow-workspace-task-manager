@@ -12,6 +12,8 @@ app.use(express.urlencoded({ extended:true }))
 
 //third party middleware, morgan logger
 app.use(morgan('dev'));
+// to able to link other files(css,js etc) to html ejs,
+app.use(express.static('public'));
 
 // this is middleware , middleware uses funtion takes three parameters always
 app.use((req,res,next) => {
