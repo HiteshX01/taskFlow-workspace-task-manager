@@ -7,7 +7,7 @@ dotenv.config();
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.send('this is home page');
 });
 
 app.get('/hitesh', (request, response) => {
@@ -17,8 +17,12 @@ app.get('/hitesh', (request, response) => {
 app.get('/leetcode', (req, res) => {
   res.send('<a href=https://leetcode.com>leetcode</a>')
 })
-app.get('/version-1-updated', (req, res) => {
-  console.log('it the version 1 updated');
+app.get('/profile', (req, res) => {
+  res.send('profile page');
+})
+
+app.get('/about', (req, res) => {
+  res.send('this is about section');
 })
 
 app.listen(port, () => {
