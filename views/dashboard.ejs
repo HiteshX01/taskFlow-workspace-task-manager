@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Task & Project Manager</title>
+  <link rel="stylesheet" href="/index.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span>⚡</span> TaskFlow Workspace
+    </div>
+    <div class="nav-user">
+      <div class="user-badge">
+        <div class="avatar"><%= user.username.charAt(0).toUpperCase() %></div>
+        <span><%= user.username %></span>
+      </div>
+      <a href="/logout" class="btn-logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="dashboard-container">
+    
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+      <h2>Welcome back, <%= user.username %>! 👋</h2>
+      <p>Track progress, organize projects, and get things done.</p>
+    </div>
+
+    <!-- Analytics & Stats Grid -->
+    <div class="stats-grid">
+      <div class="glass-panel stat-card stat-total">
+        <div class="stat-info">
+          <h4>Total Tasks</h4>
+          <div class="stat-number"><%= stats.total %></div>
+        </div>
+        <div class="stat-icon">📋</div>
+      </div>
+
+      <div class="glass-panel stat-card stat-pending">
+        <div class="stat-info">
+          <h4>Pending</h4>
+          <div class="stat-number"><%= stats.pending %></div>
+        </div>
+        <div class="stat-icon">⏳</div>
+      </div>
+
+      <div class="glass-panel stat-card stat-inprogress">
+        <div class="stat-info">
+          <h4>In Progress</h4>
+          <div class="stat-number"><%= stats.inProgress %></div>
+        </div>
+        <div class="stat-icon">⚙️</div>
+      </div>
+
+      <div class="glass-panel stat-card stat-completed">
+        <div class="stat-info">
+          <h4>Completed</h4>
+          <div class="stat-number"><%= stats.completed %></div>
+        </div>
+        <div class="stat-icon">✅</div>
+      </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="main-grid">
+
+      <!-- Left Sidebar: Create Task Form -->
+      <aside class="glass-panel create-task-panel">
+        <div class="panel-title">
+          <span>➕</span> Add New Task
+        </div>
+
+        <form action="/tasks/create" method="POST">
+          <div class="form-group">
+            <label for="title">Task Title *</label>
+            <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Build API Endpoints" required>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Project / Category</label>
+            <input type="text" id="category" name="category" class="form-control" placeholder="e.g. Backend Dev, Personal">
+          </div>
+
+          <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority" class="form-control">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High 🔥</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="dueDate">Due Date</label>
+            <input type="date" id="dueDate" name="dueDate" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" class="form-control" placeholder="Add task details..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">+ Create Task</button>
+        </form>
+      </aside>
+
+      <!-- Right Section: Task Filter Bar & Task Cards -->
+      <main>
+        
+        <!-- Filter Controls -->
+        <div class="glass-panel filter-bar">
+          <form action="/dashboard" method="GET" class="filter-group" id="filterForm">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Status</label>
+              <select name="status" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="all" <%= query.status === 'all' ? 'selected' : '' %>>All Statuses</option>
+                <option value="pending" <%= query.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                <option value="in_progress" <%= query.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                <option value="completed" <%= query.status === 'completed' ? 'selected' : '' %>>Completed</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Priority</label>
+              <select name="priority" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="all" <%= query.priority === 'all' ? 'selected' : '' %>>All Priorities</option>
+                <option value="high" <%= query.priority === 'high' ? 'selected' : '' %>>High</option>
+                <option value="medium" <%= query.priority === 'medium' ? 'selected' : '' %>>Medium</option>
+                <option value="low" <%= query.priority === 'low' ? 'selected' : '' %>>Low</option>
+              </select>
+            </div>
+
+            <% if (categories.length > 0) { %>
+              <div>
+                <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Category</label>
+                <select name="category" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                  <option value="all" <%= query.category === 'all' ? 'selected' : '' %>>All Categories</option>
+                  <% categories.forEach(cat => { %>
+                    <option value="<%= cat %>" <%= query.category === cat ? 'selected' : '' %>><%= cat %></option>
+                  <% }); %>
+                </select>
+              </div>
+            <% } %>
+          </form>
+
+          <% if (query.status !== 'all' || query.priority !== 'all' || query.category !== 'all') { %>
+            <a href="/dashboard" class="btn-logout">Reset Filters</a>
+          <% } %>
+        </div>
+
+        <!-- Task List -->
+        <div class="task-cards-list">
+          <% if (tasks.length === 0) { %>
+            <div class="glass-panel empty-state">
+              <h3>No tasks found</h3>
+              <p>Create a task on the left or change your filter options.</p>
+            </div>
+          <% } else { %>
+            <% tasks.forEach(task => { %>
+              <div class="glass-panel task-card">
+                <div class="task-main">
+                  
+                  <div class="task-meta">
+                    <span class="badge badge-<%= task.status %>">
+                      <%= task.status.replace('_', ' ') %>
+                    </span>
+                    <span class="badge badge-priority-<%= task.priority %>">
+                      <%= task.priority %> Priority
+                    </span>
+                    <span class="badge badge-category">
+                      📁 <%= task.category %>
+                    </span>
+                  </div>
+
+                  <h3 class="task-title <%= task.status === 'completed' ? 'completed' : '' %>">
+                    <%= task.title %>
+                  </h3>
+
+                  <% if (task.description) { %>
+                    <p class="task-desc"><%= task.description %></p>
+                  <% } %>
+
+                  <div class="task-footer">
+                    <span>Created: <%= new Date(task.createdAt).toLocaleDateString() %></span>
+                    <% if (task.dueDate) { %>
+                      <span>📅 Due: <%= new Date(task.dueDate).toLocaleDateString() %></span>
+                    <% } %>
+                  </div>
+
+                </div>
+
+                <div class="task-actions">
+                  <!-- Quick Update Form -->
+                  <form action="/tasks/<%= task._id %>/status" method="POST" class="status-form">
+                    <select name="status" onchange="this.form.submit()">
+                      <option value="pending" <%= task.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                      <option value="in_progress" <%= task.status === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+                      <option value="completed" <%= task.status === 'completed' ? 'selected' : '' %>>Completed</option>
+                    </select>
+                  </form>
+
+                  <!-- Delete Task -->
+                  <form action="/tasks/<%= task._id %>/delete" method="POST" onsubmit="return confirm('Delete this task?')">
+                    <button type="submit" class="btn btn-danger">🗑️</button>
+                  </form>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+      </main>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

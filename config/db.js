@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
-export const dbConnection = mongoose.connect('mongodb://0.0.0.0/javascript-backend').then(() => {
-  console.log('database conneted');
-})
+export const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/task-manager');
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`MongoDB Connection Error: ${error.message}`);
+    process.exit(1);
+  }
+};
 

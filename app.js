@@ -1,93 +1,62 @@
 import express from 'express';
+import session from 'express-session';
 import morgan from 'morgan';
-import { userModel } from './models/user.js';
-import { dbConnection } from './config/db.js';
-const app = express();
-
 import dotenv from 'dotenv';
+
+import { connectDB } from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
+
 dotenv.config();
+
+const app = express();
 const port = process.env.PORT || 3000;
 
-//built in middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended:true }))
+// Connect to MongoDB
+connectDB();
 
-//third party middleware, morgan logger
+// Built-in & Third-party Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-// to able to link other files(css,js etc) to html ejs,
 app.use(express.static('public'));
 
-// this is middleware , middleware uses funtion takes three parameters always
-app.use((req,res,next) => {
-  console.log('this is middleware');
-  return next(); // serve the actual respone now
-})
+// Session Middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'task-manager-dev-secret-key-2026',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 1000 * 60 * 60 * 24 // 24 Hours
+  }
+}));
 
-// to serve an html page from backend, we need view engine
+// Set EJS View Engine
 app.set('view engine', 'ejs');
 
-app.get('/form', (req,res) => {
-  res.render('html');
-})
-
-app.post('/form-data', (req,res) => {
-  console.log(req.body);
-  res.send('<h2>form submitted</h2>')
-})
-
-// to serve the register page
-app.get('/register', (req,res) => {
-  res.render('register');
-})
-// to get the data from the form
-app.post('/register',async (req,res) => {
-  console.log(req.body);
-  const {username, email, password} = req.body;
-  await userModel.create({
-    username: username,
-    email:email,
-    password:password
-  })
-  res.send('registered successfully')
-})
-
-app.get('/get-users', (req, res) => {
-  userModel.find({
-    username:'w' // those have username w
-  }).then((users) => {
-    res.send(users);
-  })
-})
-
-// update
-app.get('/update-user', (req,res) => {
-  userModel.findOneAndUpdate({
-    username: 'w'
-  },{
-    username: 'well',
-    email: 'well@w.com'
-  }).then(() => {
-    res.send('user w updated');
-  })
-})
-
-//delete
-app.get('/delete-user', (req, res) => {
-  userModel.findOneAndDelete({
-    username: 'wellwishers067'
-  }).then(() => {
-    res.send('user deleted')
-  })
-})
-
-app.get('/', (req, res) => {
-  res.send('this is home page');
+// Global Locals Middleware for EJS Templates
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  next();
 });
 
-app.get('/hitesh', (request, response) => {
-  response.send('<h1>Hii This is HITESH, Welcome..</h1>')
-})
+// Mount Routers
+app.use('/', authRoutes);
+app.use('/', taskRoutes);
+
+// Default Route Redirect
+app.get('/', (req, res) => {
+  if (req.session && req.session.user) {
+    return res.redirect('/dashboard');
+  }
+  return res.redirect('/login');
+});
+
+// 404 Route Handler
+app.use((req, res) => {
+  res.status(404).render('login', { error: '404 - Page not found.' });
+});
 
 app.listen(port, () => {
-  console.log(`app is listening on port ${port}`);
+  console.log(`🚀 Task & Project Manager running at http://localhost:${port}`);
 });
