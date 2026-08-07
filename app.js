@@ -1,13 +1,11 @@
+import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 
 import { connectDB } from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;

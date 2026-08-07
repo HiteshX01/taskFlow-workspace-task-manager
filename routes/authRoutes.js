@@ -1,5 +1,5 @@
 import express from 'express';
-import { renderLogin, renderRegister, handleRegister, handleLogin, handleLogout } from '../controllers/authController.js';
+import { renderLogin, renderRegister, renderResetPassword, handleRegister, handleLogin, handleResetPassword, handleLogout } from '../controllers/authController.js';
 import { isGuest } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -7,6 +7,9 @@ const router = express.Router();
 // Guest routes (redirects to dashboard if already logged in)
 router.get('/login', isGuest, renderLogin);
 router.post('/login', isGuest, handleLogin);
+
+router.get('/resetPassword', renderResetPassword);
+router.post('/resetPassword', handleResetPassword);
 
 router.get('/register', isGuest, renderRegister);
 router.post('/register', isGuest, handleRegister);

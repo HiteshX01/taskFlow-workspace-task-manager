@@ -1,5 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { userModel } from '../models/user.js';
+import { otpModel } from '../models/otp.js';
+import crypto from "crypto";
+import { sendOtpEmail } from '../services/email.service.js';
 
 export const renderLogin = (req, res) => {
   res.render('login', { error: null });
@@ -8,6 +11,10 @@ export const renderLogin = (req, res) => {
 export const renderRegister = (req, res) => {
   res.render('register', { error: null });
 };
+
+export const renderResetPassword = (req, res) => {
+  res.render('resetPassword', { error: null });
+}
 
 export const handleRegister = async (req, res) => {
   try {
@@ -115,6 +122,40 @@ export const handleLogin = async (req, res) => {
     return res.render('login', { error: 'An error occurred during login. Please try again.' });
   }
 };
+
+export const handleResetPassword = async (req, res) => {
+  try {
+    const email = req.body.email;
+    if (!email) {
+      return res.render('resetPassword', { error: 'Please enter an email address.' });
+    }
+
+    const user = await userModel.findOne({ 
+      email: email.toLowerCase().trim() 
+    });
+
+    if (!user) {
+      return res.render('resetPassword', { error: 'Invalid email.' });
+    }
+
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    const userId = user._id;
+    
+    const saltRounds = 5;
+    const hashedOtp = await bcrypt.hash(otp, saltRounds);
+
+    await otpModel.create({
+      otpHash: hashedOtp,
+      userId: userId
+    });
+
+    await sendOtpEmail(user.email, otp);  
+    return res.render('resetPassword', { error: 'OTP sent successfully! Please check your email.' });
+  } catch (error) {
+    console.error('Reset Password Error:', error);
+    return res.render('resetPassword', { error: 'Failed to send OTP email: ' + (error.message || 'Unknown error') });
+  }
+}
 
 export const handleLogout = (req, res) => {
   req.session.destroy((err) => {
