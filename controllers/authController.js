@@ -5,7 +5,7 @@ import crypto from "crypto";
 import { sendOtpEmail } from '../services/email.service.js';
 
 export const renderLogin = (req, res) => {
-  res.render('login', { error: null });
+  res.render('login', { error: null, success: null });
 };
 
 export const renderRegister = (req, res) => {
@@ -13,8 +13,8 @@ export const renderRegister = (req, res) => {
 };
 
 export const renderResetPassword = (req, res) => {
-  res.render('resetPassword', { error: null });
-}
+  res.render('resetPassword', { error: null, success: null, step: 1, email: '' });
+};
 
 export const handleRegister = async (req, res) => {
   try {
@@ -127,35 +127,135 @@ export const handleResetPassword = async (req, res) => {
   try {
     const email = req.body.email;
     if (!email) {
-      return res.render('resetPassword', { error: 'Please enter an email address.' });
+      return res.render('resetPassword', { error: 'Please enter an email address.', success: null, step: 1, email: '' });
     }
 
-    const user = await userModel.findOne({ 
-      email: email.toLowerCase().trim() 
-    });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await userModel.findOne({ email: normalizedEmail });
 
     if (!user) {
-      return res.render('resetPassword', { error: 'Invalid email.' });
+      return res.render('resetPassword', { error: 'No user found with this email address.', success: null, step: 1, email: normalizedEmail });
     }
 
+    // Clear existing OTPs for this user
+    await otpModel.deleteMany({ userId: user._id });
+
+    // Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 1000000).toString();
-    const userId = user._id;
-    
-    const saltRounds = 5;
+    const saltRounds = 10;
     const hashedOtp = await bcrypt.hash(otp, saltRounds);
 
     await otpModel.create({
       otpHash: hashedOtp,
-      userId: userId
+      userId: user._id
     });
 
     await sendOtpEmail(user.email, otp);  
-    return res.render('resetPassword', { error: 'OTP sent successfully! Please check your email.' });
+
+    return res.render('resetPassword', {
+      error: null,
+      success: 'OTP sent successfully! Please check your email.',
+      step: 2,
+      email: normalizedEmail
+    });
   } catch (error) {
     console.error('Reset Password Error:', error);
-    return res.render('resetPassword', { error: 'Failed to send OTP email: ' + (error.message || 'Unknown error') });
+    return res.render('resetPassword', {
+      error: 'Failed to send OTP email: ' + (error.message || 'Unknown error'),
+      success: null,
+      step: 1,
+      email: req.body.email || ''
+    });
   }
-}
+};
+
+export const handleVerifyOtp = async (req, res) => {
+  try {
+    const { email, otp, password, confirmPassword } = req.body;
+
+    if (!email || !otp || !password || !confirmPassword) {
+      return res.render('resetPassword', {
+        error: 'All fields are required.',
+        success: null,
+        step: 2,
+        email: email || ''
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.render('resetPassword', {
+        error: 'Passwords do not match.',
+        success: null,
+        step: 2,
+        email: email
+      });
+    }
+
+    if (password.length < 6) {
+      return res.render('resetPassword', {
+        error: 'Password must be at least 6 characters long.',
+        success: null,
+        step: 2,
+        email: email
+      });
+    }
+
+    const user = await userModel.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      return res.render('resetPassword', {
+        error: 'User account not found.',
+        success: null,
+        step: 1,
+        email: ''
+      });
+    }
+
+    // Find latest OTP for this user
+    const otpRecord = await otpModel.findOne({ userId: user._id }).sort({ createdAt: -1 });
+    if (!otpRecord) {
+      return res.render('resetPassword', {
+        error: 'OTP has expired or is invalid. Please request a new OTP.',
+        success: null,
+        step: 2,
+        email: user.email
+      });
+    }
+
+    // Verify OTP code
+    const isMatch = await bcrypt.compare(otp.trim(), otpRecord.otpHash);
+    if (!isMatch) {
+      return res.render('resetPassword', {
+        error: 'Invalid OTP. Please check the code and try again.',
+        success: null,
+        step: 2,
+        email: user.email
+      });
+    }
+
+    // Hash new password & save to user document
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    user.password = hashedPassword;
+    await user.save();
+
+    // Delete used OTP
+    await otpModel.deleteMany({ userId: user._id });
+
+    // Render login with success alert
+    return res.render('login', {
+      error: null,
+      success: 'Password reset successfully! Please log in with your new password.'
+    });
+  } catch (error) {
+    console.error('Verify OTP Error:', error);
+    return res.render('resetPassword', {
+      error: 'An error occurred while resetting password: ' + (error.message || 'Unknown error'),
+      success: null,
+      step: 2,
+      email: req.body.email || ''
+    });
+  }
+};
 
 export const handleLogout = (req, res) => {
   req.session.destroy((err) => {
