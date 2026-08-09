@@ -4,6 +4,11 @@ import { isGuest } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// for the uptime robot 
+router.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
 // Guest routes (redirects to dashboard if already logged in)
 router.get('/login', isGuest, renderLogin);
 router.post('/login', isGuest, handleLogin);
