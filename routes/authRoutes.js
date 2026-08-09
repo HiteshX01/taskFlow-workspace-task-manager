@@ -11,7 +11,7 @@ router.get("/health", (req, res) => {
 
 // Guest routes (redirects to dashboard if already logged in)
 router.get('/login', isGuest, renderLogin);
-router.post('/login', isGuest, handleLogin);
+router.post('/login', handleLogin);
 
 router.get('/resetPassword', renderResetPassword);
 router.post('/forgot-password', handleResetPassword);

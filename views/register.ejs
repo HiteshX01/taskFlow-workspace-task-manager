@@ -79,6 +79,12 @@
       registerbtn.disabled = true;
       registerbtn.innerHTML = `<span id="spinner" class="spinner"></span> Creating Account`;
     })
+
+    // to manage the previos state (chrome stores the data as it is) to a new state with data filled in form
+    window.addEventListener("pageshow", () => {
+    registerbtn.disabled = false;
+    registerbtn.innerHTML = "Create Account";
+});
   </script>
 </body>
 </html>
