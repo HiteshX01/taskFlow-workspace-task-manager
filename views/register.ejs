@@ -20,7 +20,7 @@
         </div>
       <% } %>
 
-      <form action="/register" method="POST">
+      <form action="/register" method="POST" class="register-form">
         <div class="form-group">
           <label for="username">Username</label>
           <input 
@@ -59,7 +59,9 @@
           >
         </div>
 
-        <button type="submit" class="btn btn-primary">Create Account</button>
+        <button type="submit" class="btn btn-primary register-btn">
+          Create Account</button>
+
       </form>
 
       <div class="auth-footer">
@@ -67,5 +69,16 @@
       </div>
     </div>
   </div>
+  <script>
+    const registerForm = document.querySelector('.register-form')
+
+    const registerbtn = document.querySelector('.register-btn')
+    
+    registerForm.addEventListener("submit", () => {
+      
+      registerbtn.disabled = true;
+      registerbtn.innerHTML = `<span id="spinner" class="spinner"></span> Creating Account`;
+    })
+  </script>
 </body>
 </html>
