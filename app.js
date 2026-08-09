@@ -8,7 +8,6 @@ import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 // Connect to MongoDB
 connectDB();
@@ -55,6 +54,7 @@ app.use((req, res) => {
   res.status(404).render('login', { error: '404 - Page not found.' });
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Task & Project Manager running at http://localhost:${port}`);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Task & Project Manager running on port ${PORT}`);
 });
